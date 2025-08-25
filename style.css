@@ -80,5 +80,40 @@ button:hover { transform: scale(1.08); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 #lapBtn { background: #2196f3; color: white; }
 #clearLapsBtn { background: #9c27b0; color: white; }
 #saveTxtBtn { background: #009688; color: white; }
-#sav
+#saveCsvBtn { background: #607d8b; color: white; }
+#darkModeBtn { background: #ffc107; color: #333; }
+
+#laps {
+  list-style: none;
+  padding: 0;
+  max-height: 160px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+#laps li {
+  margin: 5px 0;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#laps li.fastest { background: #81c784; color: white; }  /* Green */
+#laps li.slowest { background: #e57373; color: white; }  /* Red */
+#laps li.normal:nth-child(odd) { background: #ffe082; }
+#laps li.normal:nth-child(even) { background: #80deea; }
+
+.stats {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
 
