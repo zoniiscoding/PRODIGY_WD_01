@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ultimate Pro Stopwatch</title>
+  <style>
+    body {
+      font-family: 'Trebuchet MS', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fad390, #a18cd1);
+      background-size: 300% 300%;
+      animation: gradientBG 12s ease infinite;
+      transition: background 0.5s, color 0.5s;
+    }
+    body.dark {
+      background: linear-gradient(135deg, #1e1e1e, #333, #444, #222);
+      color: #eee;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .stopwatch {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+      text-align: center;
+      width: 380px;
+      max-width: 95%;
+      animation: popIn 0.6s ease;
+      transition: background 0.5s, color 0.5s;
+    }
+    body.dark .stopwatch { background: #2a2a2a; color: #eee; }
+
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    #status {
+      font-size: 16px;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #666;
+    }
+    body.dark #status { color: #ddd; }
+
+    #display {
+      font-size: 42px;
+      margin-bottom: 15px;
+      font-weight: bold;
+      text-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s, box-shadow 0.3s;
+    }
+    button:hover { transform: scale(1.08); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+    #startBtn { background: #4caf50; color: white; }
+    #pauseBtn { background: #ff9800; color: white; }
+    #resetBtn { background: #f44336; color: white; }
+    #lapBtn { background: #2196f3; color: white; }
+    #clearLapsBtn { background: #9c27b0; color: white; }
+    #saveTxtBtn { background: #009688; color: white; }
+    #saveCsvBtn { background: #607d8b; color: white; }
+    #darkModeBtn { background: #ffc107; color: #333; }
+
+    #laps {
+      list-style: none;
+      padding: 0;
+      max-height: 160px;
+      overflow-y: auto;
+      margin: 0;
+    }
+
+    #laps li {
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #laps li.fastest { background: #81c784; color: white; }  /* Green */
+    #laps li.slowest { background: #e57373; color: white; }  /* Red */
+    #laps li.normal:nth-child(odd) { background: #ffe082; }
+    #laps li.normal:nth-child(even) { background: #80deea; }
+
+    .stats {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stopwatch">
+    <div id="status">⏹ Stopped</div>
+    <div id="display">00:00:00:000</div>
+
+    <div class="buttons">
+      <button id="startBtn">▶ Start</button>
+      <button id="pauseBtn" disabled>⏸ Pause</button>
+      <button id="resetBtn" disabled>⏹ Reset</button>
+      <button id="lapBtn" disabled>⏱ Lap</button>
+      <button id="clearLapsBtn" disabled>🗑 Clear</button>
+      <button id="saveTxtBtn" disabled>💾 Save TXT</button>
+      <button id="saveCsvBtn" disabled>📊 Save CSV</button>
+      <button id="darkModeBtn">🌙 Dark</button>
+    </div>
+
+    <ul id="laps"></ul>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <script>
+    let startTime, updatedTime, difference = 0, tInterval;
+    let running = false;
+    let lapCounter = 1;
+    let lapTimes = [];
+
+    const display = document.getElementById("display");
+    const status = document.getElementById("status");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const lapBtn = document.getElementById("lapBtn");
+    const clearLapsBtn = document.getElementById("clearLapsBtn");
+    const saveTxtBtn = document.getElementById("saveTxtBtn");
+    const saveCsvBtn = document.getElementById("saveCsvBtn");
+    const darkModeBtn = document.getElementById("darkModeBtn");
+    const laps = document.getElementById("laps");
+    const stats = document.getElementById("stats");
+
+    function startTimer() {
+      if (!running) {
+        startTime = new Date().getTime() - difference;
+        tInterval = setInterval(updateDisplay, 10);
+        running = true;
+        status.innerHTML = "⏵ Running";
+        startBtn.innerText = "⏸ Pause";
+        pauseBtn.disabled = false;
+        resetBtn.disabled = false;
+        lapBtn.disabled = false;
+        clearLapsBtn.disabled = false;
+        saveTxtBtn.disabled = false;
+        saveCsvBtn.disabled = false;
+      } else {
+        pauseTimer();
+      }
+    }
+
+    function pauseTimer() {
+      clearInterval(tInterval);
+      running = false;
+      status.innerHTML = "⏸ Paused";
+      startBtn.innerText = "▶ Resume";
+    }
+
+    function resetTimer() {
+      clearInterval(tInterval);
+      running = false;
+      difference = 0;
+      display.innerHTML = "00:00:00:000";
+      status.innerHTML = "⏹ Stopped";
+      startBtn.innerText = "▶ Start";
+      laps.innerHTML = "";
+      lapCounter = 1;
+      lapTimes = [];
+      stats.innerHTML = "";
+      [pauseBtn, resetBtn, lapBtn, clearLapsBtn, saveTxtBtn, saveCsvBtn].forEach(btn => btn.disabled = true);
+    }
+
+    function updateDisplay() {
+      updatedTime = new Date().getTime() - startTime;
+      difference = updatedTime;
+
+      let hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      let minutes = Math.floor((difference / (1000 * 60)) % 60);
+      let seconds = Math.floor((difference / 1000) % 60);
+      let milliseconds = Math.floor((difference % 1000));
+
+      hours = (hours < 10) ? "0" + hours : hours;
+      minutes = (minutes < 10) ? "0" + minutes : minutes;
+      seconds = (seconds < 10) ? "0" + seconds : seconds;
+      milliseconds = milliseconds.toString().padStart(3, "0");
+
+      display.innerHTML = `${hours}:${minutes}:${seconds}:${milliseconds}`;
+    }
+
+    function recordLap() {
+      if (running) {
+        let lapTime = difference;
+        lapTimes.push(lapTime);
+
+        let li = document.createElement("li");
+        li.classList.add("normal");
+        li.innerText = `Lap ${lapCounter}: ${display.innerHTML}`;
+        laps.appendChild(li);
+
+        lapCounter++;
+        highlightLaps();
+        updateStats();
+      }
+    }
+
+    function highlightLaps() {
+      let fastest = Math.min(...lapTimes);
+      let slowest = Math.max(...lapTimes);
+
+      [...laps.children].forEach((li, index) => {
+        li.className = "normal";
+        if (lapTimes[index] === fastest) {
+          li.classList.add("fastest");
+          li.innerText = `Lap ${index+1}: ${formatTime(lapTimes[index])} 🏆 Fastest`;
+        } else if (lapTimes[index] === slowest) {
+          li.classList.add("slowest");
+          li.innerText = `Lap ${index+1}: ${formatTime(lapTimes[index])} 🐢 Slowest`;
+        } else {
+          li.innerText = `Lap ${index+1}: ${formatTime(lapTimes[index])}`;
+        }
+      });
+    }
+
+    function formatTime(ms) {
+      let hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+      let minutes = Math.floor((ms / (1000 * 60)) % 60);
+      let seconds = Math.floor((ms / 1000) % 60);
+      let milliseconds = Math.floor((ms % 1000));
+
+      hours = (hours < 10) ? "0" + hours : hours;
+      minutes = (minutes < 10) ? "0" + minutes : minutes;
+      seconds = (seconds < 10) ? "0" + seconds : seconds;
+      milliseconds = milliseconds.toString().padStart(3, "0");
+
+      return `${hours}:${minutes}:${seconds}:${milliseconds}`;
+    }
+
+    function clearLaps() {
+      laps.innerHTML = "";
+      lapTimes = [];
+      lapCounter = 1;
+      stats.innerHTML = "";
+    }
+
+    function updateStats() {
+      if (lapTimes.length > 0) {
+        let total = lapTimes[lapTimes.length-1];
+        let avg = lapTimes.reduce((a,b)=>a+b,0) / lapTimes.length;
+        stats.innerHTML = `⏱ Total: ${formatTime(total)} | 📊 Avg Lap: ${formatTime(avg)}`;
+      }
+    }
+
+    function saveFile(type) {
+      if (lapTimes.length === 0) return;
+
+      let content = "";
+      if (type === "txt") {
+        content = lapTimes.map((t,i)=>`Lap ${i+1}: ${formatTime(t)}`).join("\n");
+      } else if (type === "csv") {
+        content = "Lap,Time\n" + lapTimes.map((t,i)=>`${i+1},${formatTime(t)}`).join("\n");
+      }
+
+      const blob = new Blob([content], {type: "text/plain"});
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `stopwatch.${type}`;
+      link.click();
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+      darkModeBtn.innerText = document.body.classList.contains("dark") ? "☀️ Light" : "🌙 Dark";
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") { e.preventDefault(); startTimer(); }
+      if (e.key.toLowerCase() === "l") { recordLap(); }
+      if (e.key.toLowerCase() === "r") { resetTimer(); }
+    });
+
+    startBtn.addEventListener("click", startTimer);
+    pauseBtn.addEventListener("click", pauseTimer);
+    resetBtn.addEventListener("click", resetTimer);
+    lapBtn.addEventListener("click", recordLap);
+    clearLapsBtn.addEventListener("click", clearLaps);
+    saveTxtBtn.addEventListener("click", () => saveFile("txt"));
+    saveCsvBtn.addEventListener("click", () => saveFile("csv"));
+    darkModeBtn.addEventListener("click", toggleDarkMode);
+  </script>
+</body>
+</html>
