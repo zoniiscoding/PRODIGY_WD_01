@@ -1,46 +1,55 @@
-// Quotes array
-const quotes = [
-  { text: "Be yourself; everyone else is already taken.", author: "Oscar Wilde" },
-  { text: "Two things are infinite: the universe and human stupidity; and I'm not sure about the universe.", author: "Albert Einstein" },
-  { text: "So many books, so little time.", author: "Frank Zappa" },
-  { text: "A room without books is like a body without a soul.", author: "Marcus Tullius Cicero" },
-  { text: "You only live once, but if you do it right, once is enough.", author: "Mae West" }
-];
+let startTime, updatedTime, difference = 0, tInterval;
+let running = false;
+let lapCounter = 1;
+let lapTimes = [];
 
-// DOM elements
-const quoteText = document.getElementById("quote");
-const authorText = document.getElementById("author");
-const newQuoteBtn = document.getElementById("new-quote");
-const copyBtn = document.getElementById("copy-quote");
-const downloadBtn = document.getElementById("download-quote");
+const display = document.getElementById("display");
+const status = document.getElementById("status");
+const startBtn = document.getElementById("startBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const resetBtn = document.getElementById("resetBtn");
+const lapBtn = document.getElementById("lapBtn");
+const clearLapsBtn = document.getElementById("clearLapsBtn");
+const saveTxtBtn = document.getElementById("saveTxtBtn");
+const saveCsvBtn = document.getElementById("saveCsvBtn");
+const darkModeBtn = document.getElementById("darkModeBtn");
+const laps = document.getElementById("laps");
+const stats = document.getElementById("stats");
 
-// Generate new quote
-function generateQuote() {
-  const randomIndex = Math.floor(Math.random() * quotes.length);
-  const quote = quotes[randomIndex];
-  quoteText.textContent = `"${quote.text}"`;
-  authorText.textContent = `- ${quote.author}`;
+function startTimer() {
+  if (!running) {
+    startTime = new Date().getTime() - difference;
+    tInterval = setInterval(updateDisplay, 10);
+    running = true;
+    status.innerHTML = "⏵ Running";
+    startBtn.innerText = "⏸ Pause";
+    pauseBtn.disabled = false;
+    resetBtn.disabled = false;
+    lapBtn.disabled = false;
+    clearLapsBtn.disabled = false;
+    saveTxtBtn.disabled = false;
+    saveCsvBtn.disabled = false;
+  } else {
+    pauseTimer();
+  }
 }
 
-// Copy quote to clipboard
-function copyQuote() {
-  const text = `${quoteText.textContent} ${authorText.textContent}`;
-  navigator.clipboard.writeText(text).then(() => {
-    alert("Quote copied to clipboard!");
-  });
+function pauseTimer() {
+  clearInterval(tInterval);
+  running = false;
+  status.innerHTML = "⏸ Paused";
+  startBtn.innerText = "▶ Resume";
 }
 
-// Download quote as text file
-function downloadQuote() {
-  const text = `${quoteText.textContent} ${authorText.textContent}`;
-  const blob = new Blob([text], { type: "text/plain" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "quote.txt";
-  link.click();
-}
+function resetTimer() {
+  clearInterval(tInterval);
+  running = false;
+  difference = 0;
+  display.innerHTML = "00:00:00:000";
+  status.innerHTML = "⏹ Stopped";
+  startBtn.innerText = "▶ Start";
+  laps.innerHTML = "";
+  lapCounter = 1;
+  lapTimes = [];
+  stats.innerHTML
 
-// Event listeners
-newQuoteBtn.addEventListener("click", generateQuote);
-copyBtn.addEventListener("click", copyQuote);
-downloadBtn.addEventListener("click", downloadQuote);
