@@ -3,21 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Random Quote Generator</title>
+  <title>Ultimate Pro Stopwatch</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>✨ Random Quote Generator ✨</h1>
-    <div class="quote-box">
-      <p id="quote">Click below to generate a quote!</p>
-      <span id="author"></span>
-    </div>
+  <div class="stopwatch">
+    <div id="status">⏹ Stopped</div>
+    <div id="display">00:00:00:000</div>
+
     <div class="buttons">
-      <button id="new-quote">New Quote</button>
-      <button id="copy-quote">Copy</button>
-      <button id="download-quote">Download</button>
+      <button id="startBtn">▶ Start</button>
+      <button id="pauseBtn" disabled>⏸ Pause</button>
+      <button id="resetBtn" disabled>⏹ Reset</button>
+      <button id="lapBtn" disabled>⏱ Lap</button>
+      <button id="clearLapsBtn" disabled>🗑 Clear</button>
+      <button id="saveTxtBtn" disabled>💾 Save TXT</button>
+      <button id="saveCsvBtn" disabled>📊 Save CSV</button>
+      <button id="darkModeBtn">🌙 Dark</button>
     </div>
+
+    <ul id="laps"></ul>
+    <div class="stats" id="stats"></div>
   </div>
 
   <script src="script.js"></script>
